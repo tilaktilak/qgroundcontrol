@@ -455,6 +455,7 @@ contains (DEFINES, QGC_ENABLE_PAIRING) {
 
 DebugBuild { PX4FirmwarePlugin { PX4FirmwarePluginFactory { APMFirmwarePlugin { APMFirmwarePluginFactory { !MobileBuild {
     DEFINES += UNITTEST_BUILD
+    message("Is Building UnitTests")
 
     INCLUDEPATH += \
         src/qgcunittest

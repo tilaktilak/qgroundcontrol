@@ -1,0 +1,76 @@
+# This is a basic workflow to help you get started with Actions
+
+name: Release
+
+on:
+  push:
+    branches:
+    - master
+    # Sequence of patterns matched against refs/tags
+    tags:
+    - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  # This workflow contains a job called "build"
+  build:
+
+    container: mavlink/qgc-build-linux:2019-12-21
+    # The type of runner that the job will run on
+    runs-on: [self-hosted]
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      - name: Update Git
+        run: |
+          sudo apt update
+          sudo apt-get install -y software-properties-common
+          sudo add-apt-repository ppa:git-core/ppa
+          sudo apt update
+          sudo apt install -y git
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          token: '${{ secrets.PAT }}'
+          submodules: 'recursive'
+
+      - name: Build Project
+        run: |
+          qmake --version
+          sudo apt-get install -y libsdl2-dev libxkbcommon-x11-0
+          mkdir build
+          cd build
+          ccache -C
+          qmake -r ../qgroundcontrol.pro CONFIG+=installer -spec linux-g++-64
+          make -j8
+
+      - name: Create App Image
+        run: |
+          export APPIMAGE_EXTRACT_AND_RUN=1
+          cd ${GITHUB_WORKSPACE}
+          ./deploy/create_linux_appimage.sh ${GITHUB_WORKSPACE} ${GITHUB_WORKSPACE}/build/staging ${GITHUB_WORKSPACE}/build/package
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+          asset_path: ${GITHUB_WORKSPACE}/build/package/QGroundControl.AppImage
+          asset_name: QGroundControl.AppImage
+          asset_content_type: application/octet-stream

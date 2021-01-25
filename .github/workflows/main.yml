@@ -44,8 +44,7 @@ jobs:
           sudo apt-get install -y libsdl2-dev libxkbcommon-x11-0
           mkdir build
           cd build
-          ## TODO : To speedup build for CI-DEV, uncomment it for prod
-          #ccache -C
+          ccache -C
           qmake -r ../qgroundcontrol.pro CONFIG+=debug -spec linux-g++-64
           make -j8
 

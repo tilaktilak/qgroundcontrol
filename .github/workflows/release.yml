@@ -15,7 +15,7 @@ on:
 
 jobs:
   # This workflow contains a job called "build"
-  build:
+  release:
 
     container: mavlink/qgc-build-linux:2019-12-21
     # The type of runner that the job will run on
@@ -71,6 +71,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
-          asset_path: ${GITHUB_WORKSPACE}/build/package/QGroundControl.AppImage
+          asset_path: ./build/package/QGroundControl.AppImage
           asset_name: QGroundControl.AppImage
           asset_content_type: application/octet-stream
